@@ -16,8 +16,10 @@ class BlogPostSerializers(serializers.ModelSerializer):
             'user'
         ]
 
-        def validate_title(self, value):
-            qs = BlogPost.objects.filter(title__iexact=value)
-            if qs.exist():
-                raise serializers.ValidationError("The title must be unique")
-            return value
+    def validate_title(self, value):
+        qs = BlogPost.objects.filter(title__iexact=value)  # including instance
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("This title has already been used")
+        return value
